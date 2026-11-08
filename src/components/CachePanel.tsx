@@ -32,9 +32,10 @@ export function CachePanel({ webAppUrl, onSnapshot, onData, hideReport=false }: 
       try {
         const next:CacheStatus=await request('status');if(cancelled)return;
         setStatus(next);setError('');
-        if(next.ready&&next.snapshotId!==loadedSnapshot){
+        const snapshotToken=next.snapshotId+'|'+((next as any).calendarVersion||'');
+        if(next.ready&&snapshotToken!==loadedSnapshot){
           const cached:CacheReport=await request('report');if(cancelled)return;
-          loadedSnapshot=cached.snapshotId;setReport(cached);snapshotCallback.current(cached.sources,cached.generatedAt);
+          loadedSnapshot=snapshotToken;setReport(cached);snapshotCallback.current(cached.sources,cached.generatedAt);
         }
         if(initial&&next.installed&&next.stale&&next.job?.status!=='running'&&next.job?.status!=='failed')await request('refresh');
       } catch(err:any){if(!cancelled)setError(err.message||'Koneksi cache gagal.');}

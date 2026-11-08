@@ -8,8 +8,8 @@ function executiveDispatch_(action,p) {
  p=p||{};var source=String(p.source||'ptu');
  if(action==='getStatus'||action==='testConnection')return DatabaseService.getStatus(source);
  if(action==='getPreview')return DatabaseService.getPreview(source,10);
- if(action==='cacheStatus')return ExecutiveCache.status();
- if(action==='cacheReport')return ExecutiveCache.report();
+ if(action==='cacheStatus'){var state=ExecutiveCache.status();state.calendarVersion=PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_VERSION')||'';state.calendarVersion+='|'+(PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_PROGRESS')||'');return state;}
+ if(action==='cacheReport'){var report=ExecutiveCache.report();if(report.success)report.calendar=TrainingCalendar.report(report.snapshotId);return report;}
  if(action==='cacheStart')return ExecutiveCache.requestRefresh(p.force===true||p.force==='true');
  throw new Error('Action tidak dikenal');
 }

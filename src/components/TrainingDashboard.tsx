@@ -1,3 +1,4 @@
+import {TrainingCalendar} from './TrainingCalendar';
 import {useMemo,useState} from 'react';
 import {ArrowDownToLine,SlidersHorizontal,TrendingUp,CalendarRange,Layers,Users,Clock3,ShieldCheck} from 'lucide-react';
 import type {CacheViewState} from './CachePanel';
@@ -35,6 +36,7 @@ export function TrainingDashboard({view,meetdir=false,demo=false}:{view:CacheVie
  }
  return <div className="training-dashboard" aria-label={meetdir?'Laporan Meetdir':'Dashboard training'}>
   {demo&&<div className="training-demo">MODE PREVIEW · DATA SIMULASI · BUKAN LAPORAN AKTUAL</div>}
+  {!meetdir&&<TrainingCalendar data={(view.report as any)?.calendar} snapshotId={view.report?.snapshotId||''} demo={demo}/>}
   <div className="training-heading"><div><p className="training-eyebrow">ADR Learning Center / {meetdir?'Laporan direksi':'Training intelligence'}</p><h1>{meetdir?'Laporan Meetdir':'Ringkasan Eksekutif Training'}</h1><p className="training-subtitle">{meetdir?'Dua panel periode independen, satu snapshot perhitungan.':'Pantau aktivitas pelatihan, distribusi program, dan perkembangan partisipasi.'}</p></div><div className="flex gap-2 flex-wrap"><button className="training-button" onClick={()=>setSettings(!settings)} aria-expanded={settings}><SlidersHorizontal size={15}/>Atur tampilan</button><button className="training-button primary" disabled={!ready||!valid} onClick={exportReport}><ArrowDownToLine size={15}/>Unduh PDF</button></div></div>
   <div className="training-cacheline"><ShieldCheck size={15}/><span>{ready?`Snapshot lengkap · ${new Date(view.report!.generatedAt).toLocaleString('id-ID')} · ${view.report!.sources.length} sumber`:'Menunggu snapshot lengkap dari lima sumber'}</span><a onClick={e=>{e.preventDefault();window.location.hash='#/database';}} href="#/database">Controller Database →</a></div>
   {(view.error||cubeError||view.status?.stale)&&<div role="alert" className="training-alert">{view.error||cubeError||'Pembaruan diperlukan. Angka tetap menggunakan snapshot lengkap terakhir.'}</div>}
