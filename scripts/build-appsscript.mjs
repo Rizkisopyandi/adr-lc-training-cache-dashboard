@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd(),dist=path.join(root,'dist');
+let html=fs.readFileSync(path.join(dist,'index.html'),'utf8');
+html=html.replace(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/g,(_,src)=>{const js=fs.readFileSync(path.join(dist,src.replace(/^\//,'')),'utf8').replace(/<\/script/gi,'<\\/script');return `<script type="module">${js}</script>`;});
+html=html.replace(/<link\b[^>]*href="([^"]+\.css)"[^>]*>/g,(_,src)=>`<style>${fs.readFileSync(path.join(dist,src.replace(/^\//,'')),'utf8')}</style>`);
+html=html.replace('<head>','<head><base target="_top">');
+const out=path.join(root,'apps-script');fs.mkdirSync(out,{recursive:true});
+for(const name of fs.readdirSync(path.join(root,'src/backend')))if(/\.(gs|json)$/.test(name))fs.copyFileSync(path.join(root,'src/backend',name),path.join(out,name));
+fs.writeFileSync(path.join(out,'Index.html'),html);
+console.log('Apps Script package built: apps-script/Index.html + 4 GS files + manifest.');

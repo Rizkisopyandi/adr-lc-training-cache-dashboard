@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+server-dist/
+test-dist/
+.clasp.json
+.clasprc.json
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+.vercel/
+preview/
+SHA256SUMS.json
