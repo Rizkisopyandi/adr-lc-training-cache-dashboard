@@ -17,3 +17,7 @@ Pada arsitektur ini website berjalan di Vercel; Apps Script tetap menjadi worker
 Lokal: npm install, salin .env.example menjadi .env dan isi sendiri, npm run dev. Uji: npm test, npm run typecheck, npm run build:vercel. npm run build juga menghasilkan apps-script/Index.html untuk jalur hosting Apps Script lama.
 
 Source dan hasil uji tidak menyertakan nilai environment produksi. Live connection belum dapat dinyatakan berhasil sebelum pemilik memasang backend serta mengisi environment baru.
+
+## Pelanjutan dan pemeriksaan cache awal
+
+AdminSetup.gs pada src/backend menyediakan fungsi publik untuk dropdown editor. Isi ownerEmail sesuai akun pemilik sebelum menjalankannya. configureTrainingNipCache memverifikasi header, menyimpan pilihan NIP PTU=13/PTO=12/Otomasi=12, lalu meminta refresh. Jangan menjalankan fungsi konfigurasi berulang saat job berjalan. continueTrainingCache hanya melanjutkan job aktif, memakai batch manual 2.000 baris dan menunggu worker lain selesai; tidak memulai ulang job yang sudah complete. checkTrainingCache membaca snapshot dan memvalidasi lima sumber, cube v3, ukuran laporan serta metrik rentang tiga bulan dan satu bulan. Tidak ada penulisan ke spreadsheet sumber. Worker trigger reguler tetap memakai batch 500 baris.
