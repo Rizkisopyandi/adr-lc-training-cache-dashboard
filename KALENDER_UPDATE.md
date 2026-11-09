@@ -3,7 +3,7 @@
 Navigasi dipisahkan menjadi dua halaman:
 
 - **Kalender** (`#/kalender`): kalender bulanan, pemilihan tanggal dan rincian tanggal terpilih.
-- **Training Berlangsung & Mendatang** (`#/training`): Training Hari Ini, Training Besok, dan jadwal setelah besok yang diurutkan per tanggal. Kalender bulanan tidak muncul di halaman ini.
+- **Training Hari Ini & Besok** (`#/training`): Hanya Training Hari Ini dan Training Besok. Jumlah jadwal mengikuti dua tanggal tersebut. Jadwal setelah besok tetap bisa dilihat di Kalender.
 
 Dashboard tetap berisi Ringkasan Eksekutif Training. Laporan Meetdir dan Database tetap tersedia.
 Filter sumber, jenis, dan tampilkan dibatalkan dipakai bersama kedua halaman; pilihan bulan/tanggal kalender dipertahankan saat berpindah menu. Hari ini menggunakan Asia/Jakarta. Jadwal dibatalkan disembunyikan secara default.

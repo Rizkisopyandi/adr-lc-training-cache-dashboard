@@ -23,18 +23,17 @@ const assert=require('node:assert/strict'),path=require('node:path');
  const count=Number(await page.locator('.calendar-month-summary strong').innerText());
  await page.getByLabel('Sumber kalender',{exact:true}).selectOption('ptu');
  assert.ok(Number(await page.locator('.calendar-month-summary strong').innerText())<count);
- await page.getByRole('link',{name:'Training Berlangsung & Mendatang',exact:true}).click();
+ await page.getByRole('link',{name:'Training Hari Ini & Besok',exact:true}).click();
  await page.getByRole('heading',{name:'Training Hari Ini',exact:true}).waitFor();
  assert.equal(await page.getByRole('grid').count(),0);
  assert.equal(await page.getByLabel('Sumber kalender',{exact:true}).inputValue(),'ptu');
  assert.equal(await page.getByRole('heading',{name:'Training Besok',exact:true}).count(),1);
+ assert.equal(await page.locator('.calendar-agenda').count(),2);
+ assert.equal(await page.getByRole('heading',{name:'Training Mendatang',exact:true}).count(),0);
  await page.getByLabel('Sumber kalender',{exact:true}).selectOption('');
  assert.ok(await page.locator('.calendar-agenda').first().locator('tbody tr').count()>3);
  assert.equal(await page.locator('.calendar-agenda').nth(0).locator('.calendar-agenda-heading p').innerText(),'Senin, 9 November 2026');
  assert.equal(await page.locator('.calendar-agenda').nth(1).locator('.calendar-agenda-heading p').innerText(),'Selasa, 10 November 2026');
- assert.ok(await page.locator('.calendar-upcoming tbody tr').count()>0);
- assert.equal(await page.locator('.calendar-upcoming').getByText('Senin, 9 November 2026',{exact:true}).count(),0);
- assert.equal(await page.locator('.calendar-upcoming').getByText('Selasa, 10 November 2026',{exact:true}).count(),0);
  await page.getByLabel('Jenis kalender',{exact:true}).selectOption('Internal');
  await page.getByLabel('Sumber kalender',{exact:true}).selectOption('ptu');
  assert.equal(await page.locator('.calendar-agenda tbody tr').count(),0);
@@ -42,7 +41,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
  await page.getByLabel('Sumber kalender',{exact:true}).selectOption('');
  const trainingCount=Number(await page.locator('.calendar-month-summary strong').innerText());
  await page.getByRole('checkbox',{name:'Tampilkan dibatalkan'}).check();
- assert.ok(Number(await page.locator('.calendar-month-summary strong').innerText())>trainingCount);
+ assert.equal(Number(await page.locator('.calendar-month-summary strong').innerText()),trainingCount);
  await page.getByRole('checkbox',{name:'Tampilkan dibatalkan'}).uncheck();
  const output=path.resolve(process.env.QA_OUTPUT||'../../outputs');
  require('node:fs').mkdirSync(output,{recursive:true});
@@ -54,13 +53,13 @@ const assert=require('node:assert/strict'),path=require('node:path');
  assert.equal(await page.getByRole('button',{name:'Kamis, 29 Februari 2024',exact:true}).count(),1);
  await page.getByRole('button',{name:'Bulan kalender berikutnya'}).click();
  assert.equal(await page.getByLabel('Bulan kalender',{exact:true}).inputValue(),'2024-03');
- await page.getByRole('link',{name:'Training Berlangsung & Mendatang',exact:true}).click();
+ await page.getByRole('link',{name:'Training Hari Ini & Besok',exact:true}).click();
  await page.getByRole('link',{name:'Kalender',exact:true}).click();
  assert.equal(await page.getByLabel('Bulan kalender',{exact:true}).inputValue(),'2024-03');
  await page.getByRole('button',{name:'Hari ini',exact:true}).click();
  await page.evaluate(()=>scrollTo(0,0));
  await page.screenshot({path:path.join(output,'Kalender_Terpisah_SIMULASI.png'),fullPage:false});
- for(const label of ['Kalender','Training Berlangsung & Mendatang']){
+ for(const label of ['Kalender','Training Hari Ini & Besok']){
   await page.getByRole('link',{name:label,exact:true}).click();
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -74,7 +73,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
  assert.equal(await page.getByRole('grid').count(),0);
  await page.getByRole('link',{name:'Database',exact:true}).click();
  await page.getByRole('heading',{name:'Database',exact:true}).waitFor();
- for(const [route,heading] of [['kalender','Kalender Training'],['training','Training Berlangsung & Mendatang']]){
+ for(const [route,heading] of [['kalender','Kalender Training'],['training','Training Hari Ini & Besok']]){
   await page.goto(base+'/?demo=1#/'+route);await page.getByRole('heading',{name:heading,exact:true}).waitFor();
   await page.reload();await page.getByRole('heading',{name:heading,exact:true}).waitFor();
  }

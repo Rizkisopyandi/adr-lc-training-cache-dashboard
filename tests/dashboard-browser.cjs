@@ -44,7 +44,7 @@ const server=process.env.TEST_BASE_URL?null:spawn(process.execPath,['server-dist
  await page.getByRole('heading',{name:'Laporan Meetdir',exact:true}).waitFor();
  const month=await page.getByLabel('Bulan laporan Meetdir').inputValue();await page.getByLabel('Awal rentang Meetdir').fill('2026-08');assert.equal(await page.getByLabel('Bulan laporan Meetdir').inputValue(),month);
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Unduh PDF',exact:true}).click();const file=await download;assert.ok(fs.readFileSync(await file.path()).subarray(0,4).toString()==='%PDF');
- for(const [name,title] of [['Kalender','Kalender Training'],['Training Berlangsung & Mendatang','Training Berlangsung & Mendatang'],['Database','Database']]){await page.getByRole('link',{name,exact:true}).click();await page.getByRole('heading',{name:title,exact:true}).waitFor();}
+ for(const [name,title] of [['Kalender','Kalender Training'],['Training Hari Ini & Besok','Training Hari Ini & Besok'],['Database','Database']]){await page.getByRole('link',{name,exact:true}).click();await page.getByRole('heading',{name:title,exact:true}).waitFor();}
  await page.getByRole('link',{name:'Dashboard',exact:true}).click();await page.getByRole('button',{name:'Uji integrasi snapshot simulasi',exact:true}).click();
  await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await page.screenshot({path:path.join(output,'Dashboard_Analisis_Mobile_SIMULASI.png'),fullPage:false});
