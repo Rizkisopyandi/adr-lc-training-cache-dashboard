@@ -22,7 +22,7 @@ export async function session(req:RequestLike,res:ResponseLike){res.setHeader('C
 export async function gateway(req:RequestLike,res:ResponseLike){res.setHeader('Cache-Control','no-store');
  if(!authorized(req))return res.status(401).json({success:false,error:'Masuk terlebih dahulu untuk membuka data training.'});
  const action=String(req.query?.action||'');
- if(!['cacheStatus','cacheReport','cacheStart','getStatus','getPreview'].includes(action))return res.status(400).json({success:false,error:'Action tidak diizinkan.'});
+ if(!['cacheStatus','cacheReport','cacheStart','getStatus','getPreview','l1Report'].includes(action))return res.status(400).json({success:false,error:'Action tidak diizinkan.'});
  if(action==='cacheStart'&&(req.method!=='POST'||!safeOrigin(req)))return res.status(405).json({success:false,error:'Pembaruan cache memerlukan POST dari aplikasi.'});
  if(action!=='cacheStart'&&req.method!=='GET')return res.status(405).json({success:false,error:'Gunakan GET.'});
  const base=process.env.GOOGLE_APPS_SCRIPT_URL,token=process.env.ADR_API_TOKEN;
@@ -31,6 +31,7 @@ export async function gateway(req:RequestLike,res:ResponseLike){res.setHeader('C
   const u=new URL(base);if(u.protocol!=='https:'||u.hostname!=='script.google.com'||!/^\/macros\/s\/[^/]+\/exec$/.test(u.pathname))throw new Error('URL Apps Script harus https://script.google.com/macros/s/.../exec');
   u.search='';u.searchParams.set('action',action);u.searchParams.set('token',token);
   if(action==='getStatus'||action==='getPreview'){const source=String(req.query?.source||'');if(!['ptu','pto','otomasi','staff','eksternal'].includes(source))return res.status(400).json({success:false,error:'Sumber tidak valid.'});u.searchParams.set('source',source);}
+  if(action==='l1Report'){for(const key of ['row','end']){if(req.query?.[key]!==undefined){const v=String(req.query[key]);if(!/^\d{1,7}$/.test(v)||Number(v)<(key==='row'?2:1))return res.status(400).json({success:false,error:'Rentang L1 tidak valid.'});u.searchParams.set(key,v);}}}
   if(action==='cacheStart')u.searchParams.set('force',String(req.query?.force==='true'));
   const upstream=await fetch(u,{redirect:'follow',signal:AbortSignal.timeout(35000)});
   if(!upstream.ok)throw new Error(`Apps Script HTTP ${upstream.status}`);
