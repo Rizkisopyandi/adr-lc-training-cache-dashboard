@@ -1,6 +1,16 @@
 # Kalender Training
 
-Kalender bulanan berada di atas Ringkasan Eksekutif Training, dengan rincian tanggal terpilih dan hari berikutnya di bawah kalender. Pilih bulan, sumber, jenis, atau tanggal. Hari ini menggunakan zona waktu Asia/Jakarta. Jadwal dibatalkan disembunyikan secara default.
+Navigasi dipisahkan menjadi dua halaman:
+
+- **Kalender** (`#/kalender`): kalender bulanan, pemilihan tanggal dan rincian tanggal terpilih.
+- **Training Berlangsung & Mendatang** (`#/training`): Training Hari Ini, Training Besok, dan jadwal setelah besok yang diurutkan per tanggal. Kalender bulanan tidak muncul di halaman ini.
+
+Dashboard tetap berisi Ringkasan Eksekutif Training. Laporan Meetdir dan Database tetap tersedia.
+Filter sumber, jenis, dan tampilkan dibatalkan dipakai bersama kedua halaman; pilihan bulan/tanggal kalender dipertahankan saat berpindah menu. Hari ini menggunakan Asia/Jakarta. Jadwal dibatalkan disembunyikan secara default.
+
+Istilah berlangsung mengacu pada tanggal mulai hari ini, sesuai data existing. Tidak ada penentuan status realtime atau inferensi training lintas hari karena kontrak kalender existing hanya menyediakan tanggal mulai.
+
+Pemisahan menu ini hanya mengubah frontend. Jika backend kalender existing sudah terpasang dan siap, tidak perlu memasang ulang backend atau membangun ulang cache untuk perubahan navigasi ini. Petunjuk berikut hanya untuk instalasi kalender yang sebelumnya belum tersedia.
 
 Jadwal dibentuk dari halaman snapshot lengkap lima sumber yang sudah tersimpan di Drive. Kalender tidak membaca spreadsheet sumber saat halaman dibuka dan tidak mengubah perhitungan Meetdir. Indeks harus cocok dengan snapshot ringkasan; selama indeks belum selesai, pesan proses tampil dan ringkasan tetap tersedia.
 
@@ -19,4 +29,4 @@ Tidak perlu membangun ulang cache lima sumber hanya untuk penambahan kalender. K
 
 ## Validasi
 
-npm test; npm run typecheck; npm run build:vercel. tests/calendar-browser.cjs memeriksa UI demo pada localhost:3014 dengan Playwright/Edge. Preview bertanda SIMULASI bukan laporan aktual.
+npm test; npm run typecheck; npm run build:vercel. tests/calendar-browser.cjs menjalankan server hasil build lokal pada port 3015 dan memeriksa kedua halaman dengan Playwright/Edge. Jalankan setelah npm run build. PLAYWRIGHT_MODULE dapat menunjuk modul Playwright yang tersedia; TEST_BASE_URL opsional untuk server yang sudah berjalan. Pengujian membekukan tanggal pada 9 November 2026 agar fixture tetap deterministik. Preview bertanda SIMULASI bukan laporan aktual.

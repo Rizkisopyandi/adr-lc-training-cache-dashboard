@@ -12,6 +12,7 @@ export interface CacheStatus {
 }
 export interface CacheMetrics { participants: number; participantHours: number; classCount: number; uniqueEmployees: number }
 export interface CacheReport {
+  calendar?: import('../services/trainingCalendar').CalendarData;
   executive?: {version:number;buckets:import('../services/executiveMetrics').Bucket[]};
   meetdir?: MeetdirReport;
   success: boolean; snapshotId: string; generatedAt: string; expiresAt: string;
