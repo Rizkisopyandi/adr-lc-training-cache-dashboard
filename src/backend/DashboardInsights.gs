@@ -75,3 +75,10 @@ function installDashboardInsights(){
   dashboardInsightsConfig_();DashboardInsights.tick();
 }
 function rebuildDashboardInsights(){adminSetupCheck_();PropertiesService.getScriptProperties().deleteProperty('ADR_INSIGHTS_JOB');DashboardInsights.tick();}
+/** Owner-only diagnostics: counts and progress, never credentials or respondent rows. */
+function checkDashboardInsights(){
+  adminSetupCheck_();var state=ExecutiveCache.status(),r=DashboardInsights.report(state.snapshotId),raw=PropertiesService.getScriptProperties().getProperty('ADR_INSIGHTS_PROGRESS');
+  var classes=r.ready?r.classes.filter(function(c){return !c.metadataConflict;}):[],pto=classes.filter(function(c){return c.source==='pto';});
+  Logger.log(JSON.stringify({ready:r.ready,snapshotId:r.snapshotId,generatedAt:r.generatedAt||null,progress:raw?JSON.parse(raw):null,excludedRows:r.excludedRows||0,classes:classes.length,actualClasses:classes.filter(function(c){return c.state==='actual';}).length,pto:{classes:pto.length,invited:pto.reduce(function(n,c){return n+c.invited;},0),attended:pto.reduce(function(n,c){return n+c.attended;},0),batchMapped:pto.filter(function(c){return c.batchMapped;}).length,scoreMapped:pto.filter(function(c){return c.scoreMapped;}).length},warning:r.warning||''}));
+}
+
