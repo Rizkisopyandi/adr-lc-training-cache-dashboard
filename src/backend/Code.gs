@@ -1,4 +1,4 @@
-/** Install in the separate Executive project only. */
+﻿/** Install in the separate Executive project only. */
 function executiveAuthorize_() {
  var email=Session.getActiveUser().getEmail().toLowerCase();
  var allowed=String(PropertiesService.getScriptProperties().getProperty('ADR_ALLOWED_EMAILS')||'').toLowerCase().split(',').map(function(s){return s.trim();});
