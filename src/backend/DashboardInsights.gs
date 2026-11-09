@@ -23,7 +23,7 @@ function dashboardInsightsFields_(columns,source,config) {
 }
 function dashboardInsightsAccumulate_(job,source,row,f) {
   var id=cacheValue_(row,f.id),date=cacheDate_(cacheValue_(row,f.date)),title=cacheValue_(row,f.title);job.scannedRows++;
-  if(!id||!date||!title){job.excludedRows++;return;}
+  if(!id||!/^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(date)||!title){job.excludedRows++;return;}
   var batch=cacheValue_(row,f.batch),type=cacheValue_(row,f.type),category=cacheValue_(row,f.category),key=JSON.stringify([source,id,batch]);
   if(!job.classes[key])job.classes[key]={id:key,source:source,classId:id,date:date,program:title,type:type,category:category,batch:batch,batchMapped:f.batch>=0,scoreMapped:f.score>=0,statusMapped:f.status>=0,metadataConflict:false,statuses:{},invited:0,attended:0,scored:0,passed:0,excellent:0,failed:0,scoreSum:0,missingScore:0,invalidScore:0};
   var c=job.classes[key];if(c.date!==date||c.program!==title||c.type!==type||c.category!==category)c.metadataConflict=true;
