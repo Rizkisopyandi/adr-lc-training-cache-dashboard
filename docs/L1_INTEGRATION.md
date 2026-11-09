@@ -36,3 +36,7 @@ Backend: `src/backend/L1Evaluation.gs`, `Code.gs`, salinan `apps-script`, dan `s
 Tes: `tests/l1-evaluation.cjs`, `tests/vercel-gateway.cjs`, serta perintah test di `package.json`.
 Build native tetap menghasilkan satu HTML mandiri; build Vercel tetap memakai lazy chunks.
 Data demo L1 sengaja terpisah, berlabel simulasi, dan tidak dipakai sebagai fallback operasional.
+
+## Cache Database L1 (l1-v1)
+
+L1 kini dibaca ke snapshot cache agregat terpisah (L1Cache.gs, folder Drive 'ADR LC - Database L1 Cache'). Worker trigger l1CacheTick_ memproses 2.000 baris per menit, dapat dilanjutkan setelah gangguan, dan hanya menerbitkan snapshot setelah seluruh baris terekonsiliasi. Dashboard membaca snapshot (l1CacheStatus/l1CacheReport); pembaruan dimulai dari halaman Database (l1CacheStart, POST). Tanggal pelaksanaan dengan tahun di luar 2020-2030 (mis. 0024/3024) dikarantina ke 'skipped'. Spreadsheet sumber tidak ditulis.
