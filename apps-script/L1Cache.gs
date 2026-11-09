@@ -54,3 +54,10 @@ var L1Cache=(function(){
  }
  return {status:status,start:start,report:report,tick:tick};
 })();
+
+/** Jalankan sekali dari editor untuk memberi izin Trigger & Drive. Tidak mengubah data apa pun. */
+function otorisasiL1Cache() {
+  ScriptApp.getProjectTriggers();
+  DriveApp.getRootFolder();
+  Logger.log('Izin L1 Cache sudah aktif. Silakan klik "Perbarui Cache L1" di dashboard.');
+}
