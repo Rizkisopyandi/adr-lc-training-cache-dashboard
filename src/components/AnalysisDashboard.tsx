@@ -1,4 +1,5 @@
 import {L1EvaluationPanel} from './L1EvaluationPanel';
+import {TrainingInsightCards} from './TrainingInsightCards';
 
 import {lazy,Suspense,useMemo,useState,type ReactNode} from 'react';
 
@@ -56,6 +57,8 @@ export function AnalysisDashboard({view,demo}:{view:CacheViewState;demo:boolean}
 
   {(view.error||analysis.error||view.status?.stale)&&<div role="alert" className="training-alert">{view.error||analysis.error||'Cache perlu diperbarui. Data terakhir tetap dipakai; periksa Database.'}</div>}
 
+  <TrainingInsightCards report={view.report}/>
+
   <Section id="analysis-l1" title="Subdivisi · Evaluasi L1" subtitle="Kepuasan materi, penyelenggara, dan trainer" icon={<MessageSquare size={20}/>}><L1EvaluationPanel demo={demo}/></Section>
 
   {!a?<Unavailable title="Data analisis belum tersedia">{analysis.error||view.error||'Menunggu cache lengkap. Tidak ada data simulasi yang dipakai sebagai pengganti data operasional.'}</Unavailable>:<>
@@ -96,7 +99,7 @@ export function AnalysisDashboard({view,demo}:{view:CacheViewState;demo:boolean}
 
     <HorizontalBarChart title="Partisipasi hadir menurut kategori" unit="partisipasi" subtitle="Baris eligible laporan · mengikuti seluruh filter" data={a.categories.map(c=>({label:c.label,value:c.value}))}/>
 
-    <Unavailable title="Pretest–posttest dan plan vs actual belum tersedia">Nilai individu, daftar rencana, serta identitas departemen belum dikirim oleh kontrak cache Dashboard saat ini. Tidak mengubah kelas hadir menjadi kelas terlaksana atau mengarang target rencana. Filter yang tersedia adalah Divisi, sesuai data agregat.</Unavailable>
+    <Unavailable title="Pretest–posttest per departemen belum tersedia">Nilai individu dan identitas departemen belum dikirim oleh kontrak cache bagian ini. Plan vs aktual seluruh training tersedia pada kartu paling atas jika indeks rinci sudah siap. Filter bagian existing adalah Divisi, sesuai data agregat.</Unavailable>
 
    </Section>
 

@@ -5,6 +5,7 @@ export interface CacheSource {
   meetdirMissingClassId?:number; meetdirFallbackYearRows?:number; meetdirInvalidMonthRows?:number;
 }
 export interface CacheStatus {
+  insightsVersion?:string;
   success: boolean; installed: boolean; ready: boolean; stale: boolean;
   snapshotId: string | null; generatedAt: string | null; expiresAt: string | null;
   sources: CacheSource[]; transportWarning?: string;
@@ -12,6 +13,7 @@ export interface CacheStatus {
 }
 export interface CacheMetrics { participants: number; participantHours: number; classCount: number; uniqueEmployees: number }
 export interface CacheReport {
+  insights?: import('../services/trainingInsights').TrainingInsights | import('../services/trainingInsights').PendingInsights;
   calendar?: import('../services/trainingCalendar').CalendarData;
   executive?: {version:number;buckets:import('../services/executiveMetrics').Bucket[]};
   meetdir?: MeetdirReport;
