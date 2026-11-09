@@ -32,7 +32,7 @@ export function CachePanel({ webAppUrl, onSnapshot, onData, hideReport=false }: 
       try {
         const next:CacheStatus=await request('status');if(cancelled)return;
         setStatus(next);setError('');
-        const snapshotToken=next.snapshotId+'|'+((next as any).calendarVersion||'');
+        const snapshotToken=next.snapshotId+'|'+((next as any).calendarVersion||'')+'|'+(next.insightsVersion||'');
         if(next.ready&&snapshotToken!==loadedSnapshot){
           const cached:CacheReport=await request('report');if(cancelled)return;
           loadedSnapshot=snapshotToken;setReport(cached);snapshotCallback.current(cached.sources,cached.generatedAt);

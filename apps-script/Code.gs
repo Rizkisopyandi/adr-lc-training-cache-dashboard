@@ -1,4 +1,4 @@
-﻿/** Install in the separate Executive project only. */
+/** Install in the separate Executive project only. */
 function executiveAuthorize_() {
  var email=Session.getActiveUser().getEmail().toLowerCase();
  var allowed=String(PropertiesService.getScriptProperties().getProperty('ADR_ALLOWED_EMAILS')||'').toLowerCase().split(',').map(function(s){return s.trim();});
@@ -15,8 +15,8 @@ function executiveDispatch_(action,p) {
  }
  if(action==='getStatus'||action==='testConnection')return DatabaseService.getStatus(source);
  if(action==='getPreview')return DatabaseService.getPreview(source,10);
- if(action==='cacheStatus'){var state=ExecutiveCache.status();state.calendarVersion=PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_VERSION')||'';state.calendarVersion+='|'+(PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_PROGRESS')||'');return state;}
- if(action==='cacheReport'){var report=ExecutiveCache.report();if(report.success)report.calendar=TrainingCalendar.report(report.snapshotId);return report;}
+ if(action==='cacheStatus'){var state=ExecutiveCache.status();state.calendarVersion=PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_VERSION')||'';state.calendarVersion+='|'+(PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_PROGRESS')||'');state.insightsVersion=(PropertiesService.getScriptProperties().getProperty('ADR_INSIGHTS_VERSION')||'')+'|'+(PropertiesService.getScriptProperties().getProperty('ADR_INSIGHTS_PROGRESS')||'');return state;}
+ if(action==='cacheReport'){var report=ExecutiveCache.report();if(report.success){report.calendar=TrainingCalendar.report(report.snapshotId);if(typeof DashboardInsights!=='undefined')report.insights=DashboardInsights.report(report.snapshotId);}return report;}
  if(action==='cacheStart')return ExecutiveCache.requestRefresh(p.force===true||p.force==='true');
  throw new Error('Action tidak dikenal');
 }
