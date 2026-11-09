@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && vite build --config vite.server.config.ts && node scripts/build-appsscript.mjs",
+    "build": "vite build && vite build --config vite.server.config.ts && node scripts/build-appsscript.mjs && node tests/dashboard-build.cjs",
     "start": "node server-dist/server.js --production",
     "test": "node tests/training-metrics.cjs && node tests/vercel-gateway.cjs && node tests/calendar.cjs && node tests/dashboard-analysis.cjs",
     "preview": "vite preview",

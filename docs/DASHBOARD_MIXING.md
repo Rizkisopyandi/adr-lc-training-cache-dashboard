@@ -44,13 +44,15 @@ Periode laporan mengikuti Filter Bulan + tahun valid existing. Agenda mengikuti 
 - `tests/dashboard-analysis.cjs`: regresi data/rumus/cakupan dan pembulatan donut.
 - `tests/dashboard-browser.cjs`: skenario browser otomatis untuk dijalankan di host yang mendukung browser headless.
 - `tests/browser.cjs`, `tests/calendar-browser.cjs`: masuk ke Ringkasan Existing sebelum pemeriksaan regresi dashboard lama.
-- `package.json`: menambahkan test adapter ke npm test; dependency tetap sama.
+- `scripts/build-appsscript.mjs`: build single-bundle terpisah di memori untuk HTML Service; dist Vercel tetap memakai lazy chunks.
+- `tests/dashboard-build.cjs`: memastikan paket native tidak meminta asset/chunk eksternal yang tidak tersedia.
+- `package.json`: menambahkan test adapter ke npm test dan validasi paket native setelah build; dependency tetap sama.
 
 ## Validasi
 
 - `npm test`: lulus, termasuk metrik/cache/gateway/kalender existing dan test adapter baru.
 - `npm run typecheck`: lulus.
-- `npm run build`: lulus frontend, server, dan paket Apps Script.
+- `npm run build`: frontend, server, dan paket Apps Script; validasi native memastikan tidak ada request dynamic chunk/CSS eksternal.
 - `npm run build:vercel`: lulus; tidak melakukan deploy.
 - Browser aplikasi pada hasil build lokal: desain AI Studio, target KPI mengubah status, sembunyikan grafik, filter sumber/divisi, drill-down, pilihan existing, Meetdir dan periode independen, unduhan PDF, Kalender/Training/Database, dan akses gate non-demo berhasil diperiksa.
 - Desktop dan lebar 390px diperiksa; screenshot simulasi disediakan. Tidak ada error console yang tercatat pada pemeriksaan tersebut.

@@ -1,0 +1,10 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const html=fs.readFileSync('apps-script/Index.html','utf8');
+assert.ok(!/<script\b[^>]*src=/.test(html),'HTML Service must not request external JS chunks');
+assert.ok(!/<link\b[^>]*href=/.test(html),'HTML Service must not request external CSS');
+const scripts=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
+assert.ok(!/\bimport\s*\(/.test(scripts),'Native HTML must not dynamically import unavailable chunk paths');
+assert.ok(html.includes('Ringkasan Existing')&&html.includes('Dashboard Analisis'));
+assert.ok(html.includes('Laporan Meetdir')&&html.includes('Kalender Training'));
+assert.ok(fs.readFileSync('dist/index.html','utf8').includes('/assets/'),'Vercel dist must retain regular assets');
+console.log('PASS native package: self-contained Dashboard and existing pages, no dynamic chunk/CSS requests; Vercel build preserved.');
