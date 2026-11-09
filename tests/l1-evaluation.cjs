@@ -25,10 +25,11 @@ vm.runInNewContext(fs.readFileSync('src/backend/L1Evaluation.gs','utf8'),sandbox
  const page=sandbox.L1Evaluation.report({row:2});last++;assert.throws(()=>sandbox.L1Evaluation.report({row:2002,end:page.end}),/berubah/);last--;
  headers[4]='wrong';assert.throws(()=>sandbox.L1Evaluation.report({row:2}),/Struktur/);headers[4]='Tema pelatihan';
  assert.equal(analyzeL1(demoL1(),{period:'',program:'',trainer:''}).responses,10);
+ const cached={...report,success:true,cacheVersion:'l1-v1',snapshotId:'test-full',expiresAt:new Date(Date.now()+3600000).toISOString()};assert.equal(moduleL1.exports.parseL1Snapshot(cached,'test-full').sessions.length,2);assert.throws(()=>moduleL1.exports.parseL1Snapshot({...cached,end:999},'test-full'),/belum lengkap/);assert.throws(()=>moduleL1.exports.parseL1Snapshot(cached,'other'),/tidak valid/);
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server'),ui={exports:{}};
  vm.runInNewContext(buildSync({entryPoints:['src/components/L1EvaluationPanel.tsx'],bundle:true,platform:'node',format:'cjs',external:['react','react-dom'],write:false}).outputFiles[0].text,{module:ui,exports:ui.exports,require,console,Date});
  const html=renderToStaticMarkup(React.createElement(ui.exports.L1EvaluationPanel,{demo:true}));
  for(const label of ['L1 SIMULASI','Periode L1','Trainer L1','Evaluasi materi','Evaluasi penyelenggara','Evaluasi trainer','Distribusi seluruh jawaban aspek','Tren kepuasan materi','Rincian respons'])assert.ok(html.includes(label),label);
- const pending=renderToStaticMarkup(React.createElement(ui.exports.L1EvaluationPanel,{demo:false}));assert.ok(pending.includes('Muat data L1'));assert.ok(!pending.includes('Trainer Demo'));
+ const pending=renderToStaticMarkup(React.createElement(ui.exports.L1EvaluationPanel,{demo:false}));assert.ok(pending.includes('Kelola Cache L1 di Database'));assert.ok(!pending.includes('Trainer Demo'));
  console.log('PASS L1: read-only paged source, 3 trainer slots, positive 4–5 denominator, blanks, invalid date/header, filtered/empty states, row reconciliation, complete-only results, cancellation and changed source.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

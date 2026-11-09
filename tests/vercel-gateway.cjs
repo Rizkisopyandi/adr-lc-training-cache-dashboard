@@ -17,6 +17,10 @@ const req=(method='GET',query={},body={})=>({method,headers:{host:'dashboard.exa
  q=req('GET',{action:'l1Report',row:'2',end:'42779'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,200);
  q=req('GET',{action:'l1Report',row:'-1'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,400);
  q=req('POST',{action:'l1Report'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,405);
+ for(const action of ['l1CacheStatus','l1CacheReport']){q=req('GET',{action});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,200);}
+ q=req('GET',{action:'l1CacheStart'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,405);
+ q=req('POST',{action:'l1CacheStart'});q.headers={...q.headers,cookie,origin:'https://evil.example'};r=response();await gateway(q,r);assert.equal(r.code,405);
+ q=req('POST',{action:'l1CacheStart'});q.headers={...q.headers,cookie,origin:'https://dashboard.example'};r=response();await gateway(q,r);assert.equal(r.code,200);
  env.ADR_DASHBOARD_PASSWORD='short';r=response();await session(req('POST',{}, {password:'short'}),r);assert.equal(r.code,503);
  console.log('PASS Vercel gateway: fail closed, session cookie, password mismatch/tamper, fixed upstream, no token in response, POST-only refresh and cross-origin rejection');
 })().catch(e=>{console.error(e);process.exitCode=1;});

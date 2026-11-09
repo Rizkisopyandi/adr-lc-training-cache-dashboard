@@ -10,6 +10,9 @@ function executiveDispatch_(action,p) {
  if(action==='getPreview')return DatabaseService.getPreview(source,10);
  if(action==='cacheStatus'){var state=ExecutiveCache.status();state.calendarVersion=PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_VERSION')||'';state.calendarVersion+='|'+(PropertiesService.getScriptProperties().getProperty('ADR_CALENDAR_PROGRESS')||'');return state;}
  if(action==='cacheReport'){var report=ExecutiveCache.report();if(report.success)report.calendar=TrainingCalendar.report(report.snapshotId);return report;}
+ if(action==='l1CacheStatus')return L1Cache.status();
+ if(action==='l1CacheReport')return L1Cache.report();
+ if(action==='l1CacheStart')return L1Cache.start();
  if(action==='l1Report')return L1Evaluation.report(p);
  if(action==='cacheStart')return ExecutiveCache.requestRefresh(p.force===true||p.force==='true');
  throw new Error('Action tidak dikenal');

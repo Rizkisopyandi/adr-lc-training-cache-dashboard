@@ -5,7 +5,7 @@ export const trainerAspects=['Penguasaan materi','Penyampaian','Menjawab pertany
 export type L1Bucket={program:string;date:string;trainer:string;responses:number;counts:number[][]};
 export type L1Report={sessions:L1Bucket[];trainers:L1Bucket[];skipped:number;blank:number;unnamed:number;generatedAt:string;end:number};
 export type L1Filters={period:string;program:string;trainer:string};
-function validBucket(b:any,n:number):b is L1Bucket{return b&&typeof b.program==='string'&&typeof b.trainer==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(b.date)&&Number.isSafeInteger(b.responses)&&b.responses>0&&Array.isArray(b.counts)&&b.counts.length===n&&b.counts.every((c:any)=>Array.isArray(c)&&c.length===6&&c.every((v:any)=>Number.isSafeInteger(v)&&v>=0)&&c.reduce((a:number,v:number)=>a+v,0)===b.responses);}
+export function validBucket(b:any,n:number):b is L1Bucket{return b&&typeof b.program==='string'&&typeof b.trainer==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(b.date)&&Number.isSafeInteger(b.responses)&&b.responses>0&&Array.isArray(b.counts)&&b.counts.length===n&&b.counts.every((c:any)=>Array.isArray(c)&&c.length===6&&c.every((v:any)=>Number.isSafeInteger(v)&&v>=0)&&c.reduce((a:number,v:number)=>a+v,0)===b.responses);}
 function merge(map:Map<string,L1Bucket>,rows:L1Bucket[]){for(const b of rows){const key=JSON.stringify([b.program,b.date,b.trainer]),old=map.get(key);if(!old)map.set(key,{...b,counts:b.counts.map(c=>[...c])});else{old.responses+=b.responses;b.counts.forEach((c,i)=>c.forEach((v,j)=>old.counts[i][j]+=v));}}}
 // A partial scan is never published as the full result. Stop on cancellation or incompatible backend.
 export async function loadL1(progress:(n:number,total:number)=>void,cancelled:()=>boolean,call=gasCall):Promise<L1Report>{
@@ -41,4 +41,9 @@ export function analyzeL1(report:L1Report,filters:L1Filters){
 export function demoL1():L1Report{
  const counts=(n:number)=>Array.from({length:n},(_,i)=>i%2?[1,0,0,1,3,5]:[0,0,1,1,2,6]);
  return {sessions:[{program:'Contoh Training · SIMULASI',date:'2026-11-09',trainer:'',responses:10,counts:counts(7)}],trainers:[{program:'Contoh Training · SIMULASI',date:'2026-11-09',trainer:'Trainer Demo',responses:10,counts:counts(6)}],skipped:0,blank:0,unnamed:0,end:11,generatedAt:'2026-11-09T03:00:00Z'};
+}
+
+export function parseL1Snapshot(p:any,expected:string):L1Report{
+ if(p?.success!==true||p.cacheVersion!=='l1-v1'||!expected||p.snapshotId!==expected||!Array.isArray(p.sessions)||!p.sessions.every((b:any)=>validBucket(b,7))||!Array.isArray(p.trainers)||!p.trainers.every((b:any)=>validBucket(b,6))||!['end','skipped','blank','unnamed'].every(k=>Number.isSafeInteger(p[k])&&p[k]>=0)||p.end<1||!Number.isFinite(Date.parse(p.generatedAt))||!Number.isFinite(Date.parse(p.expiresAt))||p.sessions.reduce((n:number,b:L1Bucket)=>n+b.responses,0)+p.skipped+p.blank!==p.end-1)throw new Error('Snapshot cache L1 tidak valid atau belum lengkap.');
+ return p;
 }

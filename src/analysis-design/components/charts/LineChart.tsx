@@ -199,14 +199,24 @@ export const LineChart: React.FC<LineChartProps> = ({
                 )}
 
                 {/* X Axis label */}
-                <text
-                  x={pt.x}
-                  y={height - 15}
-                  textAnchor="middle"
-                  className="text-[10px] fill-slate-600 font-medium"
-                >
-                  {pt.label}
-                </text>
+                {(() => {
+                  const stride = data.length > 12 ? Math.ceil(data.length / 8) : 1;
+                  const show = idx % stride === 0 || idx === data.length - 1;
+                  if (!show) return null;
+                  const m = pt.label.match(/^(\d{4})-(\d{2})$/);
+                  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                  const displayLabel = m ? (months[Number(m[2])-1] + " '" + m[1].slice(2)) : pt.label;
+                  return (
+                    <text
+                      x={pt.x}
+                      y={height - 15}
+                      textAnchor="middle"
+                      className="text-[10px] fill-slate-600 font-medium"
+                    >
+                      {displayLabel}
+                    </text>
+                  );
+                })()}
               </g>
             );
           })}

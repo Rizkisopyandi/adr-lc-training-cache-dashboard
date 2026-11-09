@@ -22,9 +22,9 @@ export async function session(req:RequestLike,res:ResponseLike){res.setHeader('C
 export async function gateway(req:RequestLike,res:ResponseLike){res.setHeader('Cache-Control','no-store');
  if(!authorized(req))return res.status(401).json({success:false,error:'Masuk terlebih dahulu untuk membuka data training.'});
  const action=String(req.query?.action||'');
- if(!['cacheStatus','cacheReport','cacheStart','getStatus','getPreview','l1Report'].includes(action))return res.status(400).json({success:false,error:'Action tidak diizinkan.'});
- if(action==='cacheStart'&&(req.method!=='POST'||!safeOrigin(req)))return res.status(405).json({success:false,error:'Pembaruan cache memerlukan POST dari aplikasi.'});
- if(action!=='cacheStart'&&req.method!=='GET')return res.status(405).json({success:false,error:'Gunakan GET.'});
+ if(!['cacheStatus','cacheReport','cacheStart','getStatus','getPreview','l1Report','l1CacheStatus','l1CacheReport','l1CacheStart'].includes(action))return res.status(400).json({success:false,error:'Action tidak diizinkan.'});
+ if(['cacheStart','l1CacheStart'].includes(action)&&(req.method!=='POST'||!safeOrigin(req)))return res.status(405).json({success:false,error:'Pembaruan cache memerlukan POST dari aplikasi.'});
+ if(!['cacheStart','l1CacheStart'].includes(action)&&req.method!=='GET')return res.status(405).json({success:false,error:'Gunakan GET.'});
  const base=process.env.GOOGLE_APPS_SCRIPT_URL,token=process.env.ADR_API_TOKEN;
  if(!base||!token)return res.status(503).json({success:false,error:'Koneksi belum dikonfigurasi. Atur GOOGLE_APPS_SCRIPT_URL dan ADR_API_TOKEN di Vercel, lalu redeploy.'});
  try{

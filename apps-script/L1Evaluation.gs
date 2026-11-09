@@ -3,9 +3,10 @@ var L1Evaluation=(function(){
  var ID='10DgCSgbUayP9okBQ2l-3OLe_Nx_o4T4exwYHLWEvvPA', PAGE=2000;
  function text(v){return String(v==null?'':v).trim();}
  function date(v){
-  if(v instanceof Date&&!isNaN(v.getTime()))return Utilities.formatDate(v,'Asia/Bangkok','yyyy-MM-dd');
+  if(v instanceof Date&&!isNaN(v.getTime())){var dStr=Utilities.formatDate(v,'Asia/Bangkok','yyyy-MM-dd'),y=Number(dStr.slice(0,4));return (y>=2020&&y<=2030)?dStr:'';}
   var s=text(v),m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)s=m[3]+'-'+m[2]+'-'+m[1];
   if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return '';
+  var year=Number(s.slice(0,4));if(year<2020||year>2030)return '';
   var d=new Date(s+'T00:00:00Z');return !isNaN(d.getTime())&&d.toISOString().slice(0,10)===s?s:'';
  }
  function bucket(program,day,trainer,n){return {program:program,date:day,trainer:trainer,responses:0,counts:Array.from({length:n},function(){return [0,0,0,0,0,0];})};}
