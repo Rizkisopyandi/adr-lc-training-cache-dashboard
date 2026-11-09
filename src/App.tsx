@@ -1,3 +1,4 @@
+import {TrainingCalendar} from './components/TrainingCalendar';
 import {TrainingDashboard} from './components/TrainingDashboard';
 import {demoTraining} from './services/demoTraining';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -152,12 +153,16 @@ export default function App() {
       <AppNavigation page={page} />
       {/* Main Container */}
       <main className="flex-1 min-w-0 w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 print:p-0">
+        <div hidden={page!=='calendar'&&page!=='training'}>
+          {!demo&&(cacheView.error||cacheView.status?.stale)&&<div role="alert" className="training-alert">{cacheView.error||'Pembaruan diperlukan. Jadwal memakai snapshot lengkap terakhir.'}</div>}
+          <TrainingCalendar data={(demoView||cacheView).report?.calendar} snapshotId={(demoView||cacheView).report?.snapshotId||''} demo={demo} mode={page==='training'?'training':'calendar'}/>
+        </div>
         {page==='dashboard'&&<TrainingDashboard view={demoView||cacheView} demo={demo}/>}
         {page==='meetdir'&&<TrainingDashboard view={demoView||cacheView} meetdir demo={demo}/>}
         <div hidden={page !== 'database'} className="space-y-6 print:hidden">
         <div><p className="text-xs uppercase tracking-widest font-semibold text-emerald-700">Controller</p><h1 className="text-2xl font-bold text-slate-900 mt-1">Database</h1><p className="text-sm text-slate-500 mt-1">Pantau koneksi, proses cache, dan sumber yang perlu diperiksa.</p></div>
         <CachePanel webAppUrl={demo?'':webAppUrl} onSnapshot={acceptSnapshot} onData={setCacheView} hideReport />
-        
+
         {/* Summary Dashboard Banner */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-2xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
