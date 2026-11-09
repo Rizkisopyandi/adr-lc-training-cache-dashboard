@@ -12,7 +12,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
  page.on('pageerror',e=>errors.push(e.message));
  await page.clock.setFixedTime(new Date('2026-11-09T03:00:00Z'));
  await page.route('**/*',r=>['localhost','127.0.0.1'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
- await page.goto(base+'/?demo=1#/dashboard');
+ await page.goto(base+'/?demo=1#/dashboard');await page.getByRole('button',{name:'Ringkasan Existing',exact:true}).click();
  await page.getByRole('heading',{name:'Ringkasan Eksekutif Training',exact:true}).waitFor();
  assert.equal(await page.getByRole('grid').count(),0);
  const before=await page.locator('.metric strong').nth(1).innerText();
@@ -67,7 +67,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
   await page.screenshot({path:path.join(output,label==='Kalender'?'Kalender_Mobile_SIMULASI.png':'Training_Mobile_SIMULASI.png'),fullPage:false});
   await page.setViewportSize({width:1512,height:1100});
  }
- await page.getByRole('link',{name:'Dashboard',exact:true}).click();
+ await page.getByRole('link',{name:'Dashboard',exact:true}).click();await page.getByRole('button',{name:'Ringkasan Existing',exact:true}).click();
  assert.equal(await page.locator('.metric strong').nth(1).innerText(),before);
  await page.getByRole('link',{name:'Laporan Meetdir',exact:true}).click();
  await page.getByRole('heading',{name:'Laporan Meetdir',exact:true}).waitFor();
