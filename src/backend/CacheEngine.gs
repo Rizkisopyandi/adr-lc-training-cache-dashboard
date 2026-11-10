@@ -107,11 +107,15 @@ var ExecutiveCache = {
       job:job };
   },
   requestRefresh: function(force) {
+    var requests = PropertiesService.getScriptProperties();
+    if (force) requests.setProperty('ADR_CACHE_REFRESH_REQUESTED', Utilities.getUuid());
     var lock = LockService.getScriptLock();
-    if (!lock.tryLock(200)) return { success:true, queued:false, message:'Sinkronisasi sedang bekerja.' };
+    if (!lock.tryLock(200)) return { success:true, queued:!!requests.getProperty('ADR_CACHE_REFRESH_REQUESTED'), message:'Sinkronisasi sedang bekerja.' };
     try {
       var p = PropertiesService.getScriptProperties(), folderId = p.getProperty('ADR_CACHE_FOLDER');
       if (!folderId) throw new Error('Jalankan installExecutiveCache_ sekali di editor Apps Script Executive, kemudian izinkan Drive dan trigger.');
+      var requestToken = p.getProperty('ADR_CACHE_REFRESH_REQUESTED');
+      force = force || !!requestToken;
       var oldJob = p.getProperty('ADR_CACHE_JOB');
       if (oldJob) {
         var progress=p.getProperty('ADR_CACHE_PROGRESS');
@@ -138,6 +142,8 @@ var ExecutiveCache = {
       // Source metadata is initialized by the background worker, not by this HTTP request.
       Object.keys(SOURCE_CONFIG).forEach(function(key){ job.sources.push({ key:key,status:'pending',cursor:2,lastRow:1,columns:[],pages:[],recordCount:0,missingNip:0,invalidDates:0,invalidDurations:0,statusConflicts:0,repeatedHeaders:0,compositeClassRows:0,unresolvedClassRows:0 }); });
       job.fileId = cacheWriteJson_(folder,'job.json',job); cacheSaveJob_(job); p.setProperty('ADR_CACHE_JOB',job.fileId);
+      // A newer concurrent request must survive this publication of the job pointer.
+      if (requestToken && p.getProperty('ADR_CACHE_REFRESH_REQUESTED') === requestToken) p.setProperty('ADR_CACHE_REFRESH_REQUESTED', '');
       return { success:true,queued:true,jobId:job.id };
     } finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
   },

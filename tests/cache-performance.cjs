@@ -45,3 +45,19 @@ test('date parsing handles display dates and rejects impossible dates',()=>{asse
 test('rotation keeps two completed snapshots and reuses staging folders without unbounded copies',()=>{context.ExecutiveCache.requestRefresh(true);finish();context.ExecutiveCache.requestRefresh(true);finish();const folderCount=folders.size;context.ExecutiveCache.requestRefresh(true);finish();assert.equal(folders.size,folderCount);assert.equal([...folders.values()].filter(f=>f.trashed).length,0);assert.equal(folders.get(properties.ADR_CACHE_FOLDER).trashed,false);});
 test('obsolete job is replaced safely for v3 cube schema',()=>{context.ExecutiveCache.requestRefresh(true);const oldId=properties.ADR_CACHE_JOB,job=JSON.parse(files.get(oldId).text);job.version='drive-cache-v1';files.get(oldId).text=JSON.stringify(job);const progress=JSON.parse(properties.ADR_CACHE_PROGRESS);progress.cacheVersion='drive-cache-v1';properties.ADR_CACHE_PROGRESS=JSON.stringify(progress);const active=properties.ADR_CACHE_ACTIVE;context.ExecutiveCache.tick();assert.equal(properties.ADR_CACHE_ACTIVE,active);assert.notEqual(JSON.parse(files.get(properties.ADR_CACHE_JOB).text).id,job.id);const status=finish();assert.equal(status.ready,true);assert.equal(context.ExecutiveCache.report().executive.version,3);});
 console.log(`${checks} cache engine tests passed. Drive, triggers and all source data simulated.`);
+
+test('forced refresh survives a busy lock and is consumed by the next worker',()=>{
+  const lockService=context.LockService;
+  context.LockService={getScriptLock:()=>({tryLock:()=>false,releaseLock(){}})};
+  const prior=properties.ADR_CACHE_ACTIVE;
+  assert.equal(context.ExecutiveCache.requestRefresh(true).queued,true);
+  assert.ok(properties.ADR_CACHE_REFRESH_REQUESTED);
+  assert.equal(properties.ADR_CACHE_ACTIVE,prior);
+  context.LockService=lockService;
+  context.ExecutiveCache.tick();
+  assert.equal(properties.ADR_CACHE_REFRESH_REQUESTED,'');
+  assert.equal(context.ExecutiveCache.status().job.status,'running');
+  assert.equal(properties.ADR_CACHE_ACTIVE,prior);
+  finish();
+  assert.notEqual(properties.ADR_CACHE_ACTIVE,prior);
+});

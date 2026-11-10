@@ -4,6 +4,7 @@ var CacheRetention=(function(){
  function read(id){return cacheReadJson_(id);}
  function run(){
   var p=PropertiesService.getScriptProperties();if(p.getProperty('ADR_CACHE_RETENTION_SINGLE')!=='1')return {status:'disabled'};
+  if(p.getProperty('ADR_CACHE_REFRESH_REQUESTED'))return {status:'deferred',reason:'training-refresh-requested'};
   var refreshProgress=p.getProperty('ADR_CACHE_PROGRESS');if(refreshProgress&&JSON.parse(refreshProgress).status==='running')return {status:'deferred',reason:'training-refresh'};
   var lock=LockService.getScriptLock();if(!lock.tryLock(200))return {status:'busy'};
   var result={status:'complete',deletedFiles:0,deletedFolders:0,compactedJobs:0,updatedAt:new Date().toISOString(),error:''},deadline=Date.now()+10000;
