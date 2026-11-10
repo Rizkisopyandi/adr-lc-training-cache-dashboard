@@ -21,7 +21,8 @@ var CacheRetention=(function(){
     manifest=read(activeId);var report=read(manifest.reportId);activeFile(manifest.reportId,activeFolder.getId(),'report.json');
     if(manifest.cacheVersion!==ADR_CACHE_VERSION||!manifest.snapshotId||report.success!==true||report.snapshotId!==manifest.snapshotId||!Array.isArray(manifest.pages))throw new Error('Snapshot training baru belum tervalidasi.');
     // Validate all referenced pages before retiring any previous training snapshot.
-    var keep={};keep[activeId]=true;keep[manifest.reportId]=true;manifest.pages.forEach(function(s){if(!Array.isArray(s.pages))throw new Error('Manifest halaman tidak valid.');s.pages.forEach(function(id){activeFile(id,activeFolder.getId());keep[id]=true;});});
+    var activeFiles={},activeEntries=activeFolder.getFiles();while(activeEntries.hasNext())activeFiles[activeEntries.next().getId()]=true;
+    var keep={};keep[activeId]=true;keep[manifest.reportId]=true;manifest.pages.forEach(function(s){if(!Array.isArray(s.pages))throw new Error('Manifest halaman tidak valid.');s.pages.forEach(function(id){if(!activeFiles[id])throw new Error('Halaman snapshot aktif di luar folder cache.');keep[id]=true;});});deadline=Date.now()+10000;
     p.deleteProperty('ADR_CACHE_PREVIOUS');p.deleteProperty('ADR_CACHE_REUSE');
     var folders=training.getFolders(),jobId=p.getProperty('ADR_CACHE_JOB'),currentJob=null;
     if(jobId){var jf=DriveApp.getFileById(jobId),jp=jf.getParents();if(!jp.hasNext())throw new Error('Checkpoint training tanpa folder.');currentJob=job(jobId,jp.next().getId(),'job.json');keep[jobId]=true;}

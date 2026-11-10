@@ -12,6 +12,8 @@ function setup(){
 function training(){const t=setup(),root=t.item('ADR LC Executive - Cache',null,null,true),old=t.snapshot(root,'old'),active=t.snapshot(root,'new');t.props.set('ADR_CACHE_FOLDER',root.id);t.props.set('ADR_CACHE_ACTIVE',active.manifest.id);return {...t,root,old,active};}
 let t=training();assert.equal(t.run().status,'disabled');assert.ok(t.items.has(t.old.page.id));
 t.props.set('ADR_CACHE_RETENTION_SINGLE','1');t.props.set('ADR_CACHE_PREVIOUS',t.old.manifest.id);const source=t.item('source.xlsx',null,{source:true}),unknown=t.item('notes.txt',t.root.id,{});assert.equal(t.run().status,'complete');assert.ok(!t.items.has(t.old.f.id));assert.ok(t.items.has(t.active.page.id));assert.ok(t.items.has(source.id));assert.ok(t.items.has(unknown.id));assert.ok(!t.props.has('ADR_CACHE_PREVIOUS'));assert.equal(t.locked(),false);
+// Validate pages from one directory listing, avoiding a remote parent lookup per page.
+t=training();t.props.set('ADR_CACHE_RETENTION_SINGLE','1');t.active.page.getParents=()=>{throw Error('per-page metadata lookup');};assert.equal(t.run().status,'complete');assert.ok(t.items.has(t.active.page.id));
 // Running staging survives; failed staging loses raw data but preserves a compact diagnostic checkpoint.
 t=training();t.props.set('ADR_CACHE_RETENTION_SINGLE','1');const staging=t.snapshot(t.root,'staging'),job=t.item('job.json',staging.f.id,{status:'running',buckets:{large:[1,2]},meetdirBuckets:{x:1}});t.props.set('ADR_CACHE_JOB',job.id);t.run();assert.ok(t.items.has(staging.page.id));job.value.status='failed';t.run();assert.ok(!t.items.has(staging.page.id));assert.deepEqual(job.value.buckets,{});assert.ok(t.items.has(t.active.manifest.id));
 // First-ever failed refresh has no published snapshot.
