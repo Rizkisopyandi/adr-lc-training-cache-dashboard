@@ -16,6 +16,13 @@ function calendarAccumulate_(events,source,row,f) {
   e.sources[source].invited++;if(cacheValue_(row,f.attendance).toLowerCase()==='hadir')e.sources[source].attended++;
   return true;
 }
+function calendarPublic_(aggregate, snapshotId, sourceGeneratedAt) {
+  return {version:1,ready:true,snapshotId:snapshotId,generatedAt:new Date().toISOString(),sourceGeneratedAt:sourceGeneratedAt,recordCount:aggregate.records,skippedRows:aggregate.skippedRows,events:Object.keys(aggregate.events).map(function(key) {
+    var event = Object.assign({}, aggregate.events[key]);
+    event.statuses = Object.keys(event.statuses).map(function(status) { return status.slice(7); });
+    return event;
+  }).sort(function(a,b) { return a.date.localeCompare(b.date)||a.time.localeCompare(b.time)||a.title.localeCompare(b.title); })};
+}
 var TrainingCalendar={
   start:function(){
     var p=PropertiesService.getScriptProperties(),active=p.getProperty('ADR_CACHE_ACTIVE');
@@ -36,6 +43,10 @@ var TrainingCalendar={
     try{
       var p=PropertiesService.getScriptProperties(),active=p.getProperty('ADR_CACHE_ACTIVE');if(!active)return;
       var manifest=cacheReadJson_(active),jobId=p.getProperty('ADR_CALENDAR_JOB'),job=jobId?cacheReadJson_(jobId):null;
+      if (manifest.inlineCalendar && manifest.inlineCalendar.ready === true && manifest.inlineCalendar.snapshotId === manifest.snapshotId) {
+        p.setProperty('ADR_CALENDAR_PROGRESS', JSON.stringify({snapshotId:manifest.snapshotId,status:'complete',scannedPages:0,totalPages:0,eventCount:manifest.inlineCalendar.events.length,error:'',mode:'inline'}));
+        return;
+      }
       if(!job||job.snapshotId!==manifest.snapshotId){this.start();return;}
       if(job.status!=='running')return;
       var deadline=Date.now()+25000,steps=0,checkpoint;
@@ -68,6 +79,11 @@ var TrainingCalendar={
   },
   report:function(snapshotId){
     var p=PropertiesService.getScriptProperties(),id=p.getProperty('ADR_CALENDAR_ACTIVE'),progress=p.getProperty('ADR_CALENDAR_PROGRESS');
+    var active = p.getProperty('ADR_CACHE_ACTIVE');
+    if (active) {
+      var manifest = cacheReadJson_(active);
+      if (manifest.snapshotId === snapshotId && manifest.inlineCalendar && manifest.inlineCalendar.ready === true && manifest.inlineCalendar.snapshotId === snapshotId) return manifest.inlineCalendar;
+    }
     if(id){var data=cacheReadJson_(id);if(data.snapshotId===snapshotId)return data;}
     return {version:1,ready:false,snapshotId:snapshotId,events:[],progress:progress?JSON.parse(progress):null,message:'Indeks kalender sedang disiapkan dari snapshot lima sumber.'};
   }

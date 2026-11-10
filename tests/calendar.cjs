@@ -25,7 +25,8 @@ context.TrainingCalendar.tick();assert.equal(JSON.parse(files.get(properties.ADR
 for(let i=0;i<10&&!context.TrainingCalendar.report(snapshot).ready;i++)context.TrainingCalendar.tick();
 const schedule=context.TrainingCalendar.report(snapshot);assert.equal(schedule.ready,true);assert.equal(schedule.recordCount,4195);assert.equal(reads,initialReads);assert.ok(schedule.events.length>0);assert.ok(schedule.events.some(e=>e.cancelled));
 assert.equal(schedule.events.reduce((n,e)=>n+e.invited,0),4195);assert.equal(JSON.stringify(schedule).includes('00123'),false);
-context.ExecutiveCache.requestRefresh(true);finish();const next=context.ExecutiveCache.status().snapshotId;assert.notEqual(next,snapshot);assert.equal(context.TrainingCalendar.report(next).ready,false);
+context.ExecutiveCache.requestRefresh(true);finish();const next=context.ExecutiveCache.status().snapshotId;const legacyManifest=JSON.parse(files.get(properties.ADR_CACHE_ACTIVE).text);delete legacyManifest.inlineCalendar;files.get(properties.ADR_CACHE_ACTIVE).text=JSON.stringify(legacyManifest);assert.notEqual(next,snapshot);assert.equal(context.TrainingCalendar.report(next).ready,false);
 context.TrainingCalendar.tick();for(let i=0;i<10&&!context.TrainingCalendar.report(next).ready;i++)context.TrainingCalendar.tick();assert.equal(context.TrainingCalendar.report(next).ready,true);
 console.log('PASS calendar worker: resumable failure checkpoint, no source reads, no personal NIP values, full row counts and snapshot isolation');
 `;vm.runInThisContext(`(function(require){${suite}\n})`,{filename:'calendar-worker-tests.cjs'})(require);
+

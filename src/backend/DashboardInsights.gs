@@ -39,6 +39,12 @@ function dashboardInsightsPublic_(job) {
 var DashboardInsights={
   report:function(snapshotId){
     try{var p=PropertiesService.getScriptProperties(),raw=p.getProperty('ADR_INSIGHTS_ACTIVE'),progress=p.getProperty('ADR_INSIGHTS_PROGRESS'),state=progress?JSON.parse(progress):null;
+      var activeManifestId = p.getProperty('ADR_CACHE_ACTIVE');
+      if (activeManifestId) {
+        var manifest = cacheReadJson_(activeManifestId);
+        var inline = manifest.inlineInsights;
+        if (manifest.snapshotId === snapshotId && inline && inline.ready === true && inline.version === 1 && inline.snapshotId === snapshotId && inline.signature === JSON.stringify(dashboardInsightsConfig_())) return inline;
+      }
       if(raw){var a=JSON.parse(raw);if(a.snapshotId===snapshotId){var result=cacheReadJson_(a.fileId);if(result.snapshotId!==snapshotId||result.version!==1)throw new Error('Snapshot analisis tidak cocok.');if(state&&state.status==='failed')result.warning='Pembaruan indeks gagal; indeks lengkap sebelumnya dipakai. '+(state.error||'');return result;}}
       return {version:1,ready:false,snapshotId:snapshotId,message:p.getProperty('ADR_INSIGHTS_FOLDER')?'Indeks analisis sedang disiapkan dari cache lengkap.':'Pasang DashboardInsights.gs dan jalankan installDashboardInsights dari editor Executive.',progress:state};
     }catch(e){return {version:1,ready:false,snapshotId:snapshotId,message:'Indeks analisis gagal dibaca. Laporan existing tetap tersedia.',progress:{status:'failed',error:String(e.message||e)}};}
@@ -48,6 +54,10 @@ var DashboardInsights={
     try{
       var p=PropertiesService.getScriptProperties(),folderId=p.getProperty('ADR_INSIGHTS_FOLDER'),active=p.getProperty('ADR_CACHE_ACTIVE');if(!folderId||!active)return;
       var manifest=cacheReadJson_(active),config=dashboardInsightsConfig_(),signature=JSON.stringify(config),folder=DriveApp.getFolderById(folderId),jobId=p.getProperty('ADR_INSIGHTS_JOB'),job=jobId?cacheReadJson_(jobId):null;
+      if (manifest.inlineInsights && manifest.inlineInsights.ready === true && manifest.inlineInsights.snapshotId === manifest.snapshotId && manifest.inlineInsights.signature === signature) {
+        p.setProperty('ADR_INSIGHTS_PROGRESS', JSON.stringify({snapshotId:manifest.snapshotId,status:'complete',scannedPages:0,totalPages:0,error:'',mode:'inline'}));
+        return;
+      }
       function save(){job.fileId=cacheWriteJson_(folder,'insights-job.json',job);p.setProperty('ADR_INSIGHTS_JOB',job.fileId);p.setProperty('ADR_INSIGHTS_PROGRESS',JSON.stringify({snapshotId:job.snapshotId,status:job.status,scannedPages:job.cursor,totalPages:job.pages.length,error:job.error||''}));}
       if(!job||job.snapshotId!==manifest.snapshotId||job.signature!==signature){
         var prior=p.getProperty('ADR_INSIGHTS_ACTIVE'),slot=prior&&JSON.parse(prior).slot===1?2:1,pages=[];manifest.pages.forEach(function(s){s.pages.forEach(function(id){pages.push({source:s.key,id:id});});});
