@@ -128,6 +128,13 @@ var ExecutiveCache = {
       var folder = reusable ? DriveApp.getFolderById(reusable) : DriveApp.getFolderById(folderId).createFolder('snapshot-'+Date.now());
       p.setProperty('ADR_CACHE_REUSE','');
       var job = { id:Utilities.getUuid(), version:ADR_CACHE_VERSION,fileId:'', folderId:folder.getId(),status:'running',startedAt:new Date().toISOString(),sources:[],buckets:{},meetdirBuckets:{},index:0,failures:0,error:'' };
+      if (typeof dashboardInsightsConfig_ === 'function') {
+        try {
+          var insightsConfig = dashboardInsightsConfig_();
+          job.inlineInsights = {config:insightsConfig, signature:JSON.stringify(insightsConfig), classes:{}, scannedRows:0, excludedRows:0};
+        } catch (insightsError) { job.inlineInsightsError = String(insightsError.message || insightsError); }
+      }
+      if (typeof calendarAccumulate_ === 'function') job.inlineCalendar = {events:{}, records:0, skippedRows:0};
       // Source metadata is initialized by the background worker, not by this HTTP request.
       Object.keys(SOURCE_CONFIG).forEach(function(key){ job.sources.push({ key:key,status:'pending',cursor:2,lastRow:1,columns:[],pages:[],recordCount:0,missingNip:0,invalidDates:0,invalidDurations:0,statusConflicts:0,repeatedHeaders:0,compositeClassRows:0,unresolvedClassRows:0 }); });
       job.fileId = cacheWriteJson_(folder,'job.json',job); cacheSaveJob_(job); p.setProperty('ADR_CACHE_JOB',job.fileId);
@@ -180,6 +187,24 @@ var ExecutiveCache = {
             var presence={nip:present(source.fields.nip),division:present(source.fields.division)};
             if(cacheAccumulate_(job,source,row,source.cursor+i,presence)){records.push(row);sourceRows.push(source.cursor+i);countaPresence.push(presence);}
           });
+          // Derive indices from the exact normalized records written to this page.
+          // The existing batch checkpoint rolls these counters back on write failure.
+          if (job.inlineInsights) {
+            try {
+              var insightsFields = dashboardInsightsFields_(source.columns, source.key, job.inlineInsights.config);
+              records.forEach(function(row) { dashboardInsightsAccumulate_(job.inlineInsights, source.key, row, insightsFields); });
+            } catch (insightsError) {
+              job.inlineInsightsError = String(insightsError.message || insightsError);
+              job.inlineInsights = null;
+            }
+          }
+          if (job.inlineCalendar) {
+            var scheduleFields = calendarFields_(source.columns);
+            records.forEach(function(row) {
+              job.inlineCalendar.records++;
+              if (!calendarAccumulate_(job.inlineCalendar.events, source.key, row, scheduleFields)) job.inlineCalendar.skippedRows++;
+            });
+          }
           var pageId=cacheWriteJson_(folder,source.key+'-'+source.cursor+'.json',{sourceKey:source.key,columns:source.columns,records:records,sourceRows:sourceRows,countaPresence:countaPresence});
           source.pages.push(pageId); source.cursor+=n; steps++; job.failures=0;job.error=''; cacheSaveJob_(job);
         }
@@ -189,7 +214,15 @@ var ExecutiveCache = {
         var now=new Date().toISOString();
         var report={success:true,cacheVersion:ADR_CACHE_VERSION,snapshotId:job.id,generatedAt:now,startedAt:job.startedAt,expiresAt:new Date(Date.now()+ADR_CACHE_TTL_MS).toISOString(),definition:{attendance:'Hadir',date:'Plan Start Date / Tanggal Mulai',hours:'SUM Durasi pada baris peserta hadir',classes:'COUNTUNIQUE ID_Training global; No Und untuk Staff/Eksternal; ID kosong dikecualikan'},periods:cacheReports_(job.buckets),executive:{version:3,buckets:Object.keys(job.meetdirBuckets).map(function(k){return job.meetdirBuckets[k];})},sources:job.sources.map(function(s){return {key:s.key,spreadsheetId:s.spreadsheetId,sheetName:s.sheetName,columnCount:s.columns.length,idColumnFound:s.idColumnFound,recordCount:s.recordCount,scannedRows:s.lastRow-1,missingNip:s.missingNip,invalidDates:s.invalidDates,invalidDurations:s.invalidDurations,statusConflicts:s.statusConflicts,repeatedHeaders:s.repeatedHeaders,compositeClassRows:s.compositeClassRows,unresolvedClassRows:s.unresolvedClassRows,meetdirMissingClassId:s.meetdirMissingClassId||0,meetdirFallbackYearRows:s.meetdirFallbackYearRows||0,meetdirInvalidMonthRows:s.meetdirInvalidMonthRows||0};})};
         var reportId=cacheWriteJson_(folder,'report.json',report);
-        var manifestId=cacheWriteJson_(folder,'manifest.json',{cacheVersion:ADR_CACHE_VERSION,snapshotId:job.id,generatedAt:now,expiresAt:report.expiresAt,reportId:reportId,sources:report.sources,pages:job.sources.map(function(s){return {key:s.key,pages:s.pages};})});
+        var inlineInsights = null;
+        if (job.inlineInsights) {
+          job.inlineInsights.snapshotId = job.id;
+          job.inlineInsights.sourceGeneratedAt = now;
+          inlineInsights = dashboardInsightsPublic_(job.inlineInsights);
+          inlineInsights.signature = job.inlineInsights.signature;
+        }
+        var inlineCalendar = job.inlineCalendar ? calendarPublic_(job.inlineCalendar, job.id, now) : null;
+        var manifestId=cacheWriteJson_(folder,'manifest.json',{cacheVersion:ADR_CACHE_VERSION,snapshotId:job.id,generatedAt:now,expiresAt:report.expiresAt,reportId:reportId,inlineInsights:inlineInsights,inlineCalendar:inlineCalendar,sources:report.sources,pages:job.sources.map(function(s){return {key:s.key,pages:s.pages};})});
         // Mark the staging job complete before publishing, so recovery never rewrites an active folder.
         job.status='complete';cacheSaveJob_(job);checkpoint=null;
         // Publish only after every source and every file has completed successfully.
