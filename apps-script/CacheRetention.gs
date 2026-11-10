@@ -30,8 +30,10 @@ var CacheRetention=(function(){
      var f=folders.next();if(!/^snapshot-/.test(f.getName())||!parentIs(f,training.getId()))continue;
      var isJob=currentJob&&parentIs(currentJob.file,f.getId()),state=isJob?currentJob.value.status:'';
      if(isJob&&(state==='running'||state==='publishing'))continue;
+     if(f.getId()===activeFolder.getId()){if(isJob&&['complete','failed','superseded'].indexOf(state)>=0)compact(currentJob.file,f.getId(),currentJob.value);continue;}
      var entries=[],it=f.getFiles(),unknown=false;while(it.hasNext()){var file=it.next();if(!/^(job|report|manifest)\.json$|^(ptu|pto|otomasi|staff|eksternal)-\d+\.json$/.test(file.getName()))unknown=true;entries.push(file);}
      if(unknown||f.getFolders().hasNext())continue;
+     if(result.deletedFiles+result.deletedFolders===0)deadline=Date.now()+10000;
      entries.forEach(function(file){if(keep[file.getId()])return;remove(file,f.getId());});
      if(isJob&&(state==='complete'||state==='failed'||state==='superseded'))compact(currentJob.file,f.getId(),currentJob.value);
      if(f.getId()!==activeFolder.getId()&&!isJob&&!f.getFiles().hasNext()&&budget()){Drive.Files.remove(f.getId());result.deletedFolders++;}
