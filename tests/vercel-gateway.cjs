@@ -1,26 +1,17 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{transformSync}=require('esbuild');
 const code=transformSync(fs.readFileSync('server/vercelGateway.ts','utf8'),{loader:'ts',format:'cjs'}).code;
-const env={ADR_DASHBOARD_PASSWORD:'TEST_ONLY_PASSWORD_NOT_A_SECRET_123',ADR_API_TOKEN:'TEST_ONLY_UPSTREAM_TOKEN',GOOGLE_APPS_SCRIPT_URL:'https://script.google.com/macros/s/TEST/exec',VERCEL:'1'};
-let calls=0;
-const sandbox={module:{exports:{}},exports:{},require,Buffer,URL,AbortSignal,Date,process:{env},fetch:async u=>{calls++;assert.equal(u.hostname,'script.google.com');assert.equal(u.searchParams.get('token'),env.ADR_API_TOKEN);return {ok:true,text:async()=>JSON.stringify({success:true,executive:{version:3,buckets:[]}})};}};
+const env={ADR_API_TOKEN:'TEST_ONLY_UPSTREAM_TOKEN',GOOGLE_APPS_SCRIPT_URL:'https://script.google.com/macros/s/TEST/exec'};let calls=0;
+const sandbox={module:{exports:{}},exports:{},require,URL,AbortSignal,process:{env},fetch:async u=>{calls++;assert.equal(u.hostname,'script.google.com');assert.equal(u.searchParams.get('token'),env.ADR_API_TOKEN);return {ok:true,text:async()=>JSON.stringify({success:true,records:[],cacheVersion:'l1-v1'})};}};
 vm.runInNewContext(code,sandbox);const {session,gateway}=sandbox.module.exports;
 function response(){return {code:0,headers:{},data:null,status(n){this.code=n;return this;},setHeader(k,v){this.headers[k]=v;},json(d){this.data=d;return this;}};}
-const req=(method='GET',query={},body={})=>({method,headers:{host:'dashboard.example'},query,body});
-(async()=>{let r=response();await gateway(req('GET',{action:'cacheReport'}),r);assert.equal(r.code,401);assert.equal(calls,0);
- r=response();await session(req('POST',{}, {password:'wrong'}),r);assert.equal(r.code,401);
- r=response();await session(req('POST',{}, {password:env.ADR_DASHBOARD_PASSWORD}),r);assert.equal(r.code,200);const cookie=r.headers['Set-Cookie'];assert.ok(cookie.includes('HttpOnly')&&cookie.includes('SameSite=Strict')&&cookie.includes('Secure'));
- let q=req('GET',{action:'cacheReport',webAppUrl:'https://evil.example'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,200);assert.equal(calls,1);assert.ok(!JSON.stringify(r.data).includes(env.ADR_API_TOKEN));
- q=req('GET',{action:'cacheStart'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,405);
- q=req('POST',{action:'cacheStart'});q.headers={...q.headers,cookie,origin:'https://evil.example'};r=response();await gateway(q,r);assert.equal(r.code,405);
- q=req('POST',{action:'cacheStart',force:'true'});q.headers={...q.headers,cookie,origin:'https://dashboard.example'};r=response();await gateway(q,r);assert.equal(r.code,200);
- q=req('GET',{action:'cacheReport'});q.headers.cookie=cookie.replace(/adr_training_session=./,'adr_training_session=x');r=response();await gateway(q,r);assert.equal(r.code,401);
- q=req('GET',{action:'l1Report',row:'2',end:'42779'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,200);
- q=req('GET',{action:'l1Report',row:'-1'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,400);
- q=req('POST',{action:'l1Report'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,405);
- for(const action of ['l1CacheStatus','l1CacheReport']){q=req('GET',{action});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,200);}
- q=req('GET',{action:'l1CacheStart'});q.headers.cookie=cookie;r=response();await gateway(q,r);assert.equal(r.code,405);
- q=req('POST',{action:'l1CacheStart'});q.headers={...q.headers,cookie,origin:'https://evil.example'};r=response();await gateway(q,r);assert.equal(r.code,405);
- q=req('POST',{action:'l1CacheStart'});q.headers={...q.headers,cookie,origin:'https://dashboard.example'};r=response();await gateway(q,r);assert.equal(r.code,200);
- env.ADR_DASHBOARD_PASSWORD='short';r=response();await session(req('POST',{}, {password:'short'}),r);assert.equal(r.code,503);
- console.log('PASS Vercel gateway: fail closed, session cookie, password mismatch/tamper, fixed upstream, no token in response, POST-only refresh and cross-origin rejection');
+const req=(method='GET',query={})=>({method,headers:{host:'dashboard.example'},query});
+(async()=>{
+ let r=response();await session(req(),r);assert.equal(r.code,200);assert.equal(r.data.mode,'public');assert.equal(r.headers['Set-Cookie'],undefined);
+ r=response();await session(req('POST'),r);assert.equal(r.code,405);
+ for(const action of ['cacheStatus','cacheReport','l1CacheStatus','l1CacheReport','l1Report','getStatus','getPreview']){r=response();await gateway(req('GET',{action,source:'ptu',row:'2'}),r);assert.equal(r.code,200,action);assert.ok(!JSON.stringify(r.data).includes(env.ADR_API_TOKEN));assert.equal(r.headers['Cache-Control'],'no-store');}
+ for(const action of ['cacheStart','l1CacheStart']){r=response();await gateway(req('GET',{action}),r);assert.equal(r.code,405);let q=req('POST',{action});q.headers.origin='https://evil.example';r=response();await gateway(q,r);assert.equal(r.code,405);q.headers.origin='https://dashboard.example';r=response();await gateway(q,r);assert.equal(r.code,200);}
+ const before=calls;for(const query of [{action:'delete'},{action:'getPreview',source:'unknown'},{action:'l1Report',row:'-1'}]){r=response();await gateway(req('GET',query),r);assert.equal(r.code,400);}assert.equal(calls,before);
+ r=response();await gateway(req('POST',{action:'cacheReport'}),r);assert.equal(r.code,405);
+ env.ADR_API_TOKEN='';r=response();await gateway(req('GET',{action:'cacheReport'}),r);assert.equal(r.code,503);
+ console.log('PASS public gateway: anonymous reads, no password/cookie, fixed secret-bearing upstream, allowlist/source/range validation, POST-only same-origin refresh, missing config fails closed.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
