@@ -24,7 +24,7 @@ var L1Cache=(function(){
    var a=active(),job={version:1,id:Utilities.getUuid(),status:'running',startedAt:new Date().toISOString(),cursor:2,end:null,scanned:0,skipped:0,blank:0,unnamed:0,sessions:{},trainers:{},slot:a&&a.slot===1?2:1,error:'',failures:0};
    var folder=DriveApp.getFolderById(folderId);job.fileId=cacheWriteJson_(folder,'l1-job.json',job);save(job);p.setProperty('ADR_L1_JOB',job.fileId);
    return {success:true,queued:true,snapshotId:job.id};
-  }finally{lock.releaseLock();}
+  }finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
  }
  function report(){var a=active();if(!a)return {success:false,error:'Cache Database L1 belum tersedia. Perbarui Cache L1 dari halaman Database.'};var r=cacheReadJson_(a.fileId);if(r.snapshotId!==a.snapshotId||r.cacheVersion!=='l1-v1')throw new Error('Snapshot L1 tidak cocok.');return r;}
  function tick(){
@@ -50,7 +50,7 @@ var L1Cache=(function(){
     }
     save(job);
    }catch(e){job=checkpoint;job.failures++;job.error=String(e.message||e);if(job.failures>=3)job.status='failed';save(job);}
-  }finally{lock.releaseLock();}
+  }finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
  }
  return {status:status,start:start,report:report,tick:tick};
 })();

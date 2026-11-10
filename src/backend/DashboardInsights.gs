@@ -64,7 +64,7 @@ var DashboardInsights={
       if(job.status==='running'&&job.cursor===job.pages.length){var result=dashboardInsightsPublic_(job);job.resultId=cacheWriteJson_(folder,'insights-'+job.slot+'.json',result);job.generatedAt=result.generatedAt;job.status='publishing';save();}
       if(job.status==='publishing'){p.setProperty('ADR_INSIGHTS_ACTIVE',JSON.stringify({snapshotId:job.snapshotId,fileId:job.resultId,slot:job.slot,generatedAt:job.generatedAt}));p.setProperty('ADR_INSIGHTS_VERSION',job.snapshotId+'|'+job.generatedAt);job.status='complete';save();}
     }catch(e){PropertiesService.getScriptProperties().setProperty('ADR_INSIGHTS_PROGRESS',JSON.stringify({status:'failed',error:String(e.message||e)}));console.error('Dashboard Insights: '+String(e.message||e));}
-    finally{lock.releaseLock();}
+    finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
   }
 };
 function dashboardInsightsTick_(){DashboardInsights.tick();}
