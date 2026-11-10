@@ -7,7 +7,7 @@
     "dev": "tsx server.ts",
     "build": "vite build && vite build --config vite.server.config.ts && node scripts/build-appsscript.mjs && node tests/dashboard-build.cjs",
     "start": "node server-dist/server.js --production",
-    "test": "node tests/training-metrics.cjs && node tests/vercel-gateway.cjs && node tests/calendar.cjs && node tests/dashboard-analysis.cjs && node tests/training-two-days.cjs && node tests/l1-evaluation.cjs && node tests/l1-cache.cjs && node tests/training-insights.cjs",
+    "test": "node tests/training-metrics.cjs && node tests/vercel-gateway.cjs && node tests/calendar.cjs && node tests/dashboard-analysis.cjs && node tests/training-two-days.cjs && node tests/l1-evaluation.cjs && node tests/l1-cache.cjs && node tests/training-insights.cjs && node tests/cache-retention.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",

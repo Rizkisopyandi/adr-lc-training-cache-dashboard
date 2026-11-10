@@ -64,7 +64,7 @@ var TrainingCalendar={
         job.failures=(job.failures||0)+1;job.error=String(err.message||err);if(job.failures>=3)job.status='failed';
         DriveApp.getFileById(jobId).setContent(JSON.stringify(job));p.setProperty('ADR_CALENDAR_PROGRESS',JSON.stringify({snapshotId:job.snapshotId,status:job.status,scannedPages:job.cursor,totalPages:job.pages.length,error:job.error}));
       }
-    }finally{lock.releaseLock();}
+    }finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
   },
   report:function(snapshotId){
     var p=PropertiesService.getScriptProperties(),id=p.getProperty('ADR_CALENDAR_ACTIVE'),progress=p.getProperty('ADR_CALENDAR_PROGRESS');

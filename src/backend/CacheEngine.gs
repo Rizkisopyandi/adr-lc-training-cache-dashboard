@@ -15,7 +15,7 @@ function installExecutiveCache_() {
   Logger.log(JSON.stringify(ExecutiveCache.requestRefresh(false)));
 }
 
-function executiveCacheTick_() { ExecutiveCache.tick(); }
+function executiveCacheTick_() { try{ExecutiveCache.tick();}finally{if(typeof CacheRetention!=='undefined')CacheRetention.run();} }
 
 function cacheReadJson_(id) { return JSON.parse(DriveApp.getFileById(id).getBlob().getDataAsString('UTF-8')); }
 function cacheWriteJson_(folder, name, value) {
@@ -132,7 +132,7 @@ var ExecutiveCache = {
       Object.keys(SOURCE_CONFIG).forEach(function(key){ job.sources.push({ key:key,status:'pending',cursor:2,lastRow:1,columns:[],pages:[],recordCount:0,missingNip:0,invalidDates:0,invalidDurations:0,statusConflicts:0,repeatedHeaders:0,compositeClassRows:0,unresolvedClassRows:0 }); });
       job.fileId = cacheWriteJson_(folder,'job.json',job); cacheSaveJob_(job); p.setProperty('ADR_CACHE_JOB',job.fileId);
       return { success:true,queued:true,jobId:job.id };
-    } finally { lock.releaseLock(); }
+    } finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
   },
   tick: function() {
     var p = PropertiesService.getScriptProperties(), jobId = p.getProperty('ADR_CACHE_JOB');
@@ -201,7 +201,7 @@ var ExecutiveCache = {
     } catch(err) {
       if(job){if(checkpoint)job=checkpoint;job.failures=(job.failures||0)+1;job.error=String(err.message||err);if(job.status!=='complete'&&job.failures>=3)job.status='failed';cacheSaveJob_(job);}
       console.error(String(err.message||err));
-    } finally {lock.releaseLock();}
+    } finally{lock.releaseLock();if(typeof CacheRetention!=='undefined')CacheRetention.run();}
   },
   report: function() {
     var id=PropertiesService.getScriptProperties().getProperty('ADR_CACHE_ACTIVE');
